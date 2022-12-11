@@ -9,13 +9,16 @@ use tracing::debug;
 /// Auto login then execute command
 /// Currently support only for linux system
 #[derive(Parser, Debug)]
-#[clap(version, about, long_about = None)]
+#[clap(version, about, long_about = None, rename_all="snake_case")]
 struct Args {
     #[arg(short = 'u', long)]
     username: String,
 
     #[arg(short = 'p', long)]
     password: String,
+
+    #[arg(long)]
+    trim_end: bool,
 }
 
 fn main() -> Result<()> {
@@ -66,6 +69,11 @@ fn main() -> Result<()> {
             .await?;
         let recv = std::str::from_utf8(&recv)?;
         let recv = recv.replace("\r\n", "\n");
+        let recv = if args.trim_end {
+            recv.trim_end_matches(|c: char| c.is_whitespace() || c == '\0')
+        } else {
+            &recv
+        };
 
         println!("{}", recv);
         Ok(())
