@@ -1,9 +1,11 @@
+use crate::repl::ReplWrapper;
 use futures_lite::{AsyncRead, AsyncWrite};
 use tracing::trace;
 
 pub mod repl;
 pub mod runner;
 
+/// Linux auto login then do command
 pub async fn linux_oneshot<
     P,
     S: AsyncRead + AsyncWrite + Unpin,
@@ -13,9 +15,8 @@ pub async fn linux_oneshot<
     username: &str,
     password: &str,
     prompt: Option<String>,
-    finalize: fn(expectrl::Session<P, S>) -> (),
     cmd: SS,
-) -> core::result::Result<Vec<u8>, expectrl::Error> {
+) -> core::result::Result<(Vec<u8>, ReplWrapper<P, S>), expectrl::Error> {
     let quit = "exit";
     let prompt = match prompt {
         Some(prompt) => prompt,
@@ -28,7 +29,7 @@ pub async fn linux_oneshot<
         .login(session, username, password, Some(&prompt))
         .await?;
     trace!("successfully logged in");
-    let mut session = crate::repl::ReplWrapper::new(session, prompt);
+    let mut session = ReplWrapper::new(session, prompt);
     trace!("expect prompt...");
     session.expect_prompt().await?;
     trace!("run_command: {:?}", cmd);
@@ -37,7 +38,5 @@ pub async fn linux_oneshot<
     trace!("send quit command: {}", quit);
     session.send_line(quit).await?;
 
-    trace!("finalize...");
-    finalize(session.into());
-    recv
+    recv.map(|recv| (recv, session))
 }
