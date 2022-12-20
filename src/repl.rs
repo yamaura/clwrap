@@ -25,6 +25,10 @@ impl<P, S> ReplWrapper<P, S> {
     pub fn new(session: Session<P, S>, prompt: Regex) -> Self {
         ReplWrapper { session, prompt }
     }
+
+    pub fn into_session(self) -> Session<P, S> {
+        self.session
+    }
 }
 
 impl<P, S: AsyncRead + AsyncWrite + Unpin> ReplWrapper<P, S> {
