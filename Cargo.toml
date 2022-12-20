@@ -14,6 +14,12 @@ keywords = []
 categories = ["command-line-interface", "command-line-utilities"]
 include = ["src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
+[package.metadata.release]
+push = false
+tag-name = "{{prefix}}{{version}}"
+pre-release-commit-message = "Bump version to {{version}}"
+tag-message = "{{tag_name}}"
+
 [dependencies]
 regex = "1"
 tracing = "0.1.37"
