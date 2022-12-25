@@ -84,3 +84,21 @@ impl LinuxLoginRunnerBuilder<((),)> {
             .build()
     }
 }
+
+#[derive(TypedBuilder)]
+#[builder(build_method(vis = "", name = build_inner))]
+pub struct SwitchLoginRunner {
+    #[builder(default = Some(Duration::from_secs_f32(3.)))]
+    timeout: Option<Duration>,
+}
+
+impl SwitchLoginRunnerBuilder<((),)> {
+    pub fn build(self) -> UserPassLoginRunner {
+        let runner = self.build_inner();
+        UserPassLoginRunner::builder()
+            .prompt_username("Username: ".to_string())
+            .prompt_password("Password:".to_string())
+            .retry_prompt_username(runner.timeout.map(|t| t.as_secs() + 1))
+            .build()
+    }
+}
