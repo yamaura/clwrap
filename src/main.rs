@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use expectrl;
+use clwrap::*;
 use std::env;
 use tracing::debug;
 
@@ -64,9 +64,8 @@ fn main() -> Result<()> {
         let username = args.username;
         let password = args.password;
 
-        let session = expectrl::spawn(spawn_command)?;
-        let recv = clwrap::linux_oneshot(session, &username, &password, None, |_| (), exec_command)
-            .await?;
+        let session = spawn(spawn_command)?;
+        let (recv, _) = linux_oneshot(session, &username, &password, None, exec_command).await?;
         let recv = std::str::from_utf8(&recv)?;
         let recv = recv.replace("\r\n", "\n");
         let recv = if args.trim_end {

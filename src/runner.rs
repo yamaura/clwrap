@@ -1,4 +1,4 @@
-use expectrl::Session;
+use crate::{Error, Session};
 use futures_lite::{AsyncRead, AsyncWrite};
 use std::time::Duration;
 use tracing::{trace, warn};
@@ -20,7 +20,7 @@ impl UserPassLoginRunner {
         username: &str,
         password: &str,
         prompt: Option<&regex::Regex>,
-    ) -> core::result::Result<Session<P, S>, expectrl::Error> {
+    ) -> core::result::Result<Session<P, S>, Error> {
         // First time is quick
         session.set_expect_timeout(Some(Duration::from_millis(1)));
 
@@ -42,7 +42,7 @@ impl UserPassLoginRunner {
                     trace!("send new line");
                     session.send_line("").await?;
                 }
-                Err(e) => return Err(e),
+                Err(e) => return Err(e.into()),
             }
             session.set_expect_timeout(Some(Duration::from_secs(1)));
 
@@ -58,7 +58,7 @@ impl UserPassLoginRunner {
         session.send_line(username).await?;
         if let Err(e) = session.expect(self.prompt_password).await {
             warn!("Could not found password prompt");
-            return Err(e);
+            return Err(e.into());
         };
         trace!("send password");
         session.send_line(password).await?;

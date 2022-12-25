@@ -1,9 +1,18 @@
-use crate::repl::ReplWrapper;
+pub use crate::repl::ReplWrapper;
+pub use expectrl::{spawn, Session};
 use futures_lite::{AsyncRead, AsyncWrite};
 use tracing::trace;
 
 pub mod repl;
 pub mod runner;
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("{0}")]
+    ExpectrlError(#[from] expectrl::Error),
+    #[error("{0}")]
+    IoError(#[from] std::io::Error),
+}
 
 /// Linux auto login then do command
 pub async fn linux_oneshot<
@@ -16,11 +25,11 @@ pub async fn linux_oneshot<
     password: &str,
     prompt: Option<String>,
     cmd: SS,
-) -> core::result::Result<(Vec<u8>, ReplWrapper<P, S>), expectrl::Error> {
+) -> core::result::Result<(Vec<u8>, ReplWrapper<P, S>), Error> {
     let quit = "exit";
     let prompt = match prompt {
         Some(prompt) => prompt,
-        None => r".*]# *".to_string(),
+        None => r".*]# |.*@.*:.*# ".to_string(),
     };
     let prompt = regex::Regex::new(&prompt).unwrap();
 
@@ -38,5 +47,5 @@ pub async fn linux_oneshot<
     trace!("send quit command: {}", quit);
     session.send_line(quit).await?;
 
-    recv.map(|recv| (recv, session))
+    Ok(recv.map(|recv| (recv, session))?)
 }

@@ -31,10 +31,11 @@ typed-builder = "0.11.0"
 clap = { version = "4.0.29", features = ["derive"], optional = true }
 tracing-subscriber = { version = "0.3.0", features = ["env-filter"], optional = true }
 anyhow = { version = "1.0.66", optional = true }
+thiserror = "1.0.38"
 
 
 [features]
-cmdline = ["clap", "tracing-subscriber","anyhow"]
+cmdline = ["clap", "tracing-subscriber", "anyhow"]
 
 [[bin]]
 name = "clwrap"
